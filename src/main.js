@@ -16,6 +16,7 @@ import {
 // ── Firestore refs ───────────────────────────────────────
 const tasksCol  = collection(db, 'tasks')
 const inkopCol  = collection(db, 'inkop')
+const receptCol = collection(db, 'recept')
 const metaRef   = doc(db, 'meta', 'daily')   // ersätter DAILY_KEY i localStorage
 
 // ── Helpers ──────────────────────────────────────────────
@@ -267,6 +268,183 @@ document.getElementById('inkop-form').addEventListener('submit', async e => {
 document.addEventListener('change', async e => {
   if (e.target.dataset.action !== 'inkop-check') return
   await deleteDoc(doc(db, 'inkop', e.target.dataset.id))
+})
+
+// ── Recept ───────────────────────────────────────────────
+let receptItems = []
+let activeRecept = null
+
+function findRecipeInData(data) {
+  if (!data) return null
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const r = findRecipeInData(item)
+      if (r) return r
+    }
+    return null
+  }
+  const types = [].concat(data['@type'] || [])
+  if (types.includes('Recipe')) {
+    const img = data.image
+    const imageUrl = Array.isArray(img) ? img[0] : img?.url || img || ''
+    return {
+      title: data.name || '',
+      image: typeof imageUrl === 'string' ? imageUrl : imageUrl?.url || '',
+      ingredients: data.recipeIngredient || [],
+      instructions: [].concat(data.recipeInstructions || [])
+        .map(i => typeof i === 'string' ? i : i.text || '')
+        .filter(Boolean),
+    }
+  }
+  if (data['@graph']) return findRecipeInData(data['@graph'])
+  return null
+}
+
+async function fetchRecipeData(url) {
+  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+  const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) })
+  const html = await res.text()
+  const doc2 = new DOMParser().parseFromString(html, 'text/html')
+  const pageTitle = doc2.querySelector('title')?.textContent?.trim() || url
+  for (const script of doc2.querySelectorAll('script[type="application/ld+json"]')) {
+    try {
+      const recipe = findRecipeInData(JSON.parse(script.textContent))
+      if (recipe) return { ...recipe, title: recipe.title || pageTitle }
+    } catch {}
+  }
+  return { title: pageTitle, image: '', ingredients: [], instructions: [] }
+}
+
+function renderRecept() {
+  const list = document.getElementById('recept-list')
+  document.getElementById('count-recept').textContent = receptItems.length
+  list.innerHTML = ''
+
+  if (receptItems.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+        Inga recept sparade än.
+      </div>`
+    return
+  }
+
+  receptItems.forEach(r => {
+    const card = document.createElement('div')
+    card.className = 'recept-card'
+    card.innerHTML = `
+      ${r.image ? `<img class="recept-card-img" src="${escapeHtml(r.image)}" alt="">` : '<div class="recept-card-placeholder"></div>'}
+      <div class="recept-card-body">
+        <div class="recept-card-title">${escapeHtml(r.title)}</div>
+        <a class="recept-card-link" href="${escapeHtml(r.url)}" target="_blank" rel="noopener">Öppna källa ↗</a>
+      </div>
+      <button class="delete-btn" data-action="delete-recept" data-id="${r.id}" title="Radera recept">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/>
+        </svg>
+      </button>`
+    card.addEventListener('click', e => {
+      if (e.target.closest('[data-action="delete-recept"]') || e.target.closest('a')) return
+      showReceptDetail(r)
+    })
+    list.appendChild(card)
+  })
+}
+
+function showReceptDetail(recept) {
+  activeRecept = recept
+  const detail   = document.getElementById('recept-detail')
+  const list     = document.getElementById('recept-list')
+  const form     = document.getElementById('recept-form')
+
+  const ingredientsHtml = recept.ingredients.length
+    ? recept.ingredients.map(ing => `<li class="recept-ingredient" data-name="${escapeHtml(ing)}">${escapeHtml(ing)}</li>`).join('')
+    : '<li class="recept-no-data">Inga ingredienser hittades</li>'
+
+  const instructionsHtml = recept.instructions.length
+    ? recept.instructions.map((step, i) => `
+        <li class="recept-step"><span class="step-num">${i + 1}</span>${escapeHtml(step)}</li>`).join('')
+    : '<li class="recept-no-data">Inga instruktioner hittades</li>'
+
+  detail.innerHTML = `
+    <button class="recept-back-btn" id="recept-back">← Alla recept</button>
+    ${recept.image ? `<img class="recept-hero" src="${escapeHtml(recept.image)}" alt="">` : ''}
+    <h2 class="recept-title">${escapeHtml(recept.title)}</h2>
+    <a class="recept-source-link" href="${escapeHtml(recept.url)}" target="_blank" rel="noopener">Öppna originalkälla ↗</a>
+    <h3 class="recept-section-heading">Ingredienser <span class="recept-hint">— klicka för att lägga till i inköpslistan</span></h3>
+    <ul class="recept-ingredients">${ingredientsHtml}</ul>
+    <h3 class="recept-section-heading">Instruktioner</h3>
+    <ol class="recept-instructions">${instructionsHtml}</ol>`
+
+  detail.classList.remove('recept-hidden')
+  list.classList.add('recept-hidden')
+  form.classList.add('recept-hidden')
+
+  document.getElementById('recept-back').addEventListener('click', () => {
+    detail.classList.add('recept-hidden')
+    list.classList.remove('recept-hidden')
+    form.classList.remove('recept-hidden')
+    activeRecept = null
+  })
+
+  detail.querySelectorAll('.recept-ingredient').forEach(el => {
+    el.addEventListener('click', async () => {
+      const name = el.dataset.name
+      if (confirm(`Lägg till "${name}" i inköpslistan?`)) {
+        await addDoc(inkopCol, { name, createdAt: Date.now() })
+      }
+    })
+  })
+}
+
+onSnapshot(
+  query(receptCol, orderBy('createdAt', 'desc')),
+  snapshot => {
+    receptItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+    if (!activeRecept) renderRecept()
+  },
+  err => console.error('Recept-lyssnare fel:', err)
+)
+
+document.getElementById('recept-form').addEventListener('submit', async e => {
+  e.preventDefault()
+  const input   = document.getElementById('recept-url')
+  const loading = document.getElementById('recept-loading')
+  const url = input.value.trim()
+  if (!url) return
+
+  loading.classList.remove('recept-hidden')
+  input.disabled = true
+
+  try {
+    const data = await fetchRecipeData(url)
+    await addDoc(receptCol, { url, ...data, createdAt: Date.now() })
+    input.value = ''
+  } catch {
+    await addDoc(receptCol, { url, title: url, image: '', ingredients: [], instructions: [], createdAt: Date.now() })
+    input.value = ''
+  } finally {
+    loading.classList.add('recept-hidden')
+    input.disabled = false
+    input.focus()
+  }
+})
+
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-action="delete-recept"]')
+  if (!btn) return
+  e.stopPropagation()
+  if (activeRecept?.id === btn.dataset.id) {
+    document.getElementById('recept-detail').classList.add('recept-hidden')
+    document.getElementById('recept-list').classList.remove('recept-hidden')
+    document.getElementById('recept-form').classList.remove('recept-hidden')
+    activeRecept = null
+  }
+  await deleteDoc(doc(db, 'recept', btn.dataset.id))
 })
 
 // ── Flikar ───────────────────────────────────────────────

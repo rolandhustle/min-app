@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Uppgifter</title>
   <link rel="icon" type="image/png" href="/raven.png">
+  <link rel="apple-touch-icon" href="/raven.png">
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 
@@ -22,6 +24,9 @@
   </button>
   <button class="tab-btn" data-tab="inkop">
     Inköpslista <span class="count" id="count-inkop">0</span>
+  </button>
+  <button class="tab-btn" data-tab="recept">
+    Recept <span class="count" id="count-recept">0</span>
   </button>
 </nav>
 
@@ -48,6 +53,17 @@
       <button type="submit">Lägg till</button>
     </form>
     <div class="inkop-list" id="inkop-list"></div>
+  </div>
+
+  <!-- Tab 4 -->
+  <div class="tab-panel" id="panel-recept">
+    <form class="add-form" id="recept-form" autocomplete="off">
+      <input type="url" id="recept-url" placeholder="Klistra in recept-URL…" required>
+      <button type="submit">Hämta</button>
+    </form>
+    <div id="recept-loading" class="recept-loading recept-hidden">Hämtar recept…</div>
+    <div id="recept-detail" class="recept-detail recept-hidden"></div>
+    <div class="recept-list" id="recept-list"></div>
   </div>
 </main>
 
