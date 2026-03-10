@@ -270,6 +270,67 @@ document.addEventListener('change', async e => {
   await deleteDoc(doc(db, 'inkop', e.target.dataset.id))
 })
 
+// ── Extrahera råvara ur ingredienssträng ─────────────────
+function extractIngredientName(raw) {
+  let s = raw.trim()
+
+  // Ta bort "ca" i början
+  s = s.replace(/^ca\.?\s+/i, '')
+
+  // Ta bort inledande siffror, bråktal och unicode-bråk
+  s = s.replace(/^[\d\s,.½¼¾⅓⅔⅛⅜⅝⅞\-\/]+/, '').trim()
+
+  // Ta bort enhet som står kvar i början
+  const units = [
+    'msk', 'tsk', 'krm', 'förp', 'dl', 'cl', 'ml',
+    'kg', 'hg', 'mg', 'g', 'liter', 'l', 'st', 'oz', 'lb',
+    'paket', 'burk', 'pkt', 'ask', 'portioner', 'portion', 'näve', 'nypor', 'nypa',
+  ]
+  for (const unit of units) {
+    const re = new RegExp(`^${unit}\\.?\\s+`, 'i')
+    s = s.replace(re, '').trim()
+  }
+
+  // Ta bort tillagningsnotes efter komma, t.ex. "lök, hackad"
+  s = s.replace(/,.*$/, '').trim()
+
+  // Ta bort parenteser, t.ex. "mjöl (vetemjöl)"
+  s = s.replace(/\(.*?\)/g, '').trim()
+
+  // Rensa sammansatta form-ord i slutet av ordet
+  // t.ex. "vitlöksklyftor" → vitlök (ta bort "klyftor", sedan genitiv-s)
+  const formWords = [
+    'klyftor', 'klyfta', 'skivor', 'skiva', 'bitar', 'bit',
+    'strimlor', 'strimla', 'knippen', 'knippe', 'kvistar', 'kvist',
+    'bullar', 'bulle', 'kärnor', 'kärna', 'blad', 'stilkar', 'stilk',
+    'skivor', 'lock', 'stockar', 'stock', 'huvuden', 'huvud',
+  ]
+  const lower = s.toLowerCase()
+  for (const form of formWords) {
+    if (lower.endsWith(form)) {
+      const stripped = s.slice(0, s.length - form.length).replace(/s$/i, '')
+      if (stripped.trim().length >= 3) { s = stripped.trim(); break }
+    }
+  }
+
+  // Ta bort ledande tillagningsadjektiv om det finns ett ord kvar
+  const adjectives = [
+    'färsk', 'färska', 'fryst', 'frysta', 'hackad', 'hackade',
+    'skivad', 'skivade', 'riven', 'rivna', 'pressad', 'pressade',
+    'tärnad', 'tärnade', 'mald', 'malen', 'strimlad', 'strimlade',
+    'kokt', 'kokta', 'stekt', 'stekta', 'grovhackad', 'finhackad',
+  ]
+  const words = s.split(/\s+/)
+  if (words.length > 1 && adjectives.includes(words[0].toLowerCase())) {
+    s = words.slice(1).join(' ')
+  }
+  if (words.length > 1 && adjectives.includes(words[words.length - 1].toLowerCase())) {
+    s = words.slice(0, -1).join(' ')
+  }
+
+  return s.trim() || raw.trim()
+}
+
 // ── Recept ───────────────────────────────────────────────
 let receptItems = []
 let activeRecept = null
@@ -441,9 +502,9 @@ function showReceptDetail(recept) {
 
   detail.querySelectorAll('.recept-ingredient').forEach(el => {
     el.addEventListener('click', async () => {
-      const name = el.dataset.name
-      if (confirm(`Lägg till "${name}" i inköpslistan?`)) {
-        await addDoc(inkopCol, { name, createdAt: Date.now() })
+      const cleaned = extractIngredientName(el.dataset.name)
+      if (confirm(`Lägg till "${cleaned}" i inköpslistan?`)) {
+        await addDoc(inkopCol, { name: cleaned, createdAt: Date.now() })
       }
     })
   })
