@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Uppgifter</title>
+  <link rel="icon" type="image/png" href="/raven.png">
 </head>
 <body>
 
@@ -18,6 +19,9 @@
   </button>
   <button class="tab-btn" data-tab="done">
     Genomfört <span class="count" id="count-done">0</span>
+  </button>
+  <button class="tab-btn" data-tab="inkop">
+    Inköpslista <span class="count" id="count-inkop">0</span>
   </button>
 </nav>
 
@@ -35,6 +39,15 @@
   <!-- Tab 2 -->
   <div class="tab-panel" id="panel-done">
     <div class="task-list" id="done-list"></div>
+  </div>
+
+  <!-- Tab 3 -->
+  <div class="tab-panel" id="panel-inkop">
+    <form class="add-form" id="inkop-form" autocomplete="off">
+      <input type="text" id="inkop-input" placeholder="Lägg till vara…" required>
+      <button type="submit">Lägg till</button>
+    </form>
+    <div class="inkop-list" id="inkop-list"></div>
   </div>
 </main>
 

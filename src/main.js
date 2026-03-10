@@ -15,6 +15,7 @@ import {
 
 // ── Firestore refs ───────────────────────────────────────
 const tasksCol  = collection(db, 'tasks')
+const inkopCol  = collection(db, 'inkop')
 const metaRef   = doc(db, 'meta', 'daily')   // ersätter DAILY_KEY i localStorage
 
 // ── Helpers ──────────────────────────────────────────────
@@ -210,6 +211,62 @@ document.addEventListener('click', async e => {
   const btn = e.target.closest('[data-action="delete"]')
   if (!btn) return
   await deleteDoc(doc(db, 'tasks', btn.dataset.id))
+})
+
+// ── Inköpslista ──────────────────────────────────────────
+let inkopItems = []
+
+function renderInkop() {
+  const list = document.getElementById('inkop-list')
+  document.getElementById('count-inkop').textContent = inkopItems.length
+
+  list.innerHTML = ''
+  if (inkopItems.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        Inköpslistan är tom.
+      </div>`
+    return
+  }
+
+  inkopItems.forEach(item => {
+    const row = document.createElement('div')
+    row.className = 'inkop-item'
+    row.innerHTML = `
+      <label class="inkop-label">
+        <input type="checkbox" data-action="inkop-check" data-id="${item.id}">
+        <span>${escapeHtml(item.name)}</span>
+      </label>`
+    list.appendChild(row)
+  })
+}
+
+onSnapshot(
+  query(inkopCol, orderBy('createdAt')),
+  snapshot => {
+    inkopItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+    renderInkop()
+  },
+  err => console.error('Inkop-lyssnare fel:', err)
+)
+
+document.getElementById('inkop-form').addEventListener('submit', async e => {
+  e.preventDefault()
+  const input = document.getElementById('inkop-input')
+  const name = input.value.trim()
+  if (!name) return
+  await addDoc(inkopCol, { name, createdAt: Date.now() })
+  input.value = ''
+  input.focus()
+})
+
+document.addEventListener('change', async e => {
+  if (e.target.dataset.action !== 'inkop-check') return
+  await deleteDoc(doc(db, 'inkop', e.target.dataset.id))
 })
 
 // ── Flikar ───────────────────────────────────────────────
