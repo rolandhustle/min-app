@@ -283,35 +283,83 @@ function findRecipeInData(data) {
     }
     return null
   }
+  if (typeof data !== 'object') return null
   const types = [].concat(data['@type'] || [])
-  if (types.includes('Recipe')) {
+  if (types.some(t => t === 'Recipe' || String(t).endsWith('/Recipe'))) {
     const img = data.image
-    const imageUrl = Array.isArray(img) ? img[0] : img?.url || img || ''
+    const rawImg = Array.isArray(img) ? img[0] : img
+    const imageUrl = typeof rawImg === 'string' ? rawImg : rawImg?.url || ''
     return {
       title: data.name || '',
-      image: typeof imageUrl === 'string' ? imageUrl : imageUrl?.url || '',
-      ingredients: data.recipeIngredient || [],
+      image: imageUrl,
+      ingredients: [].concat(data.recipeIngredient || []).filter(Boolean),
       instructions: [].concat(data.recipeInstructions || [])
-        .map(i => typeof i === 'string' ? i : i.text || '')
+        .map(i => typeof i === 'string' ? i : i.text || i.name || '')
         .filter(Boolean),
     }
   }
   if (data['@graph']) return findRecipeInData(data['@graph'])
+  // Rekursivt genom alla värden för djupt nästlade strukturer
+  for (const val of Object.values(data)) {
+    if (val && typeof val === 'object') {
+      const r = findRecipeInData(val)
+      if (r) return r
+    }
+  }
+  return null
+}
+
+function tryParseJsonLd(raw) {
+  try { return JSON.parse(raw) } catch {}
+  // Försök avkoda HTML-entiteter innan parse
+  const el = document.createElement('textarea')
+  el.innerHTML = raw
+  try { return JSON.parse(el.value) } catch {}
   return null
 }
 
 async function fetchRecipeData(url) {
-  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-  const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) })
-  const html = await res.text()
-  const doc2 = new DOMParser().parseFromString(html, 'text/html')
-  const pageTitle = doc2.querySelector('title')?.textContent?.trim() || url
-  for (const script of doc2.querySelectorAll('script[type="application/ld+json"]')) {
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  ]
+
+  let html = ''
+  for (const proxy of proxies) {
     try {
-      const recipe = findRecipeInData(JSON.parse(script.textContent))
-      if (recipe) return { ...recipe, title: recipe.title || pageTitle }
+      const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) })
+      if (res.ok) {
+        const text = await res.text()
+        if (text.length > 200) { html = text; break }
+      }
     } catch {}
   }
+
+  if (!html) return { title: url, image: '', ingredients: [], instructions: [] }
+
+  const doc2 = new DOMParser().parseFromString(html, 'text/html')
+  const pageTitle = doc2.querySelector('title')?.textContent?.trim() || url
+
+  // Försök 1: DOMParser-noder
+  for (const script of doc2.querySelectorAll('script[type="application/ld+json"]')) {
+    for (const raw of [script.textContent, script.innerHTML]) {
+      const data = tryParseJsonLd(raw)
+      if (!data) continue
+      const recipe = findRecipeInData(data)
+      if (recipe) return { ...recipe, title: recipe.title || pageTitle }
+    }
+  }
+
+  // Försök 2: regex direkt på rå HTML (om DOMParser tappade script-innehåll)
+  const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  let m
+  while ((m = re.exec(html)) !== null) {
+    const data = tryParseJsonLd(m[1])
+    if (!data) continue
+    const recipe = findRecipeInData(data)
+    if (recipe) return { ...recipe, title: recipe.title || pageTitle }
+  }
+
   return { title: pageTitle, image: '', ingredients: [], instructions: [] }
 }
 
