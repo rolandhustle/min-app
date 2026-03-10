@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uppgifter</title>
+</head>
+<body>
+
+<header>
+  <img src="/raven.png" alt="Raven">
+  <h1>Uppgifter</h1>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="todo">
+    Att göra… <span class="count" id="count-todo">0</span>
+  </button>
+  <button class="tab-btn" data-tab="done">
+    Genomfört <span class="count" id="count-done">0</span>
+  </button>
+</nav>
+
+<main>
+  <!-- Tab 1 -->
+  <div class="tab-panel active" id="panel-todo">
+    <form class="add-form" id="add-form" autocomplete="off">
+      <input type="text" id="task-title" placeholder="Lägg till ny uppgift…" required>
+      <input type="date" id="task-date">
+      <button type="submit">Lägg till</button>
+    </form>
+    <div class="task-list" id="todo-list"></div>
+  </div>
+
+  <!-- Tab 2 -->
+  <div class="tab-panel" id="panel-done">
+    <div class="task-list" id="done-list"></div>
+  </div>
+</main>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
