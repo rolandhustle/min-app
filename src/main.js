@@ -124,10 +124,11 @@ function buildCard(task) {
         <input type="checkbox" data-action="done" data-id="${task.id}"${task.done ? ' checked' : ''}>
         Klar
       </label>
-      <button class="delete-btn" data-action="delete" data-id="${task.id}" title="Radera uppgift" aria-label="Radera">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <button class="delete-btn" data-action="delete" data-id="${task.id}" title="Kasta uppgift" aria-label="Kasta">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/>
         </svg>
+        Kasta
       </button>
     </div>
   `

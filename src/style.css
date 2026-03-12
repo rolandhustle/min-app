@@ -97,21 +97,7 @@ header h1 {
 }
 
 .tab-icon .count {
-  position: absolute;
-  top: -5px;
-  right: -9px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  background: #c0392b;
-  border-radius: 99px;
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  display: none;
 }
 
 /* ── Main ── */
@@ -279,30 +265,48 @@ main {
 .task-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .cb-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  gap: 7px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #252525;
+  background: #111;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
-.cb-label:hover { color: #aaa; }
+.cb-label:hover { border-color: #383838; color: #999; }
+
+.cb-label:has(input[data-action="started"]:checked) {
+  background: #0d1f3a;
+  border-color: #1e3a6a;
+  color: #5b9ef4;
+}
+
+.cb-label:has(input[data-action="done"]:checked) {
+  background: #0d2b1a;
+  border-color: #1a4a2a;
+  color: #4ade80;
+}
 
 .cb-label input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border: 1.5px solid #3a3a3a;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
@@ -310,39 +314,49 @@ main {
   background: transparent;
 }
 
-.cb-label input[type="checkbox"]:checked {
-  background: var(--text);
-  border-color: var(--text);
+.cb-label:has(input[data-action="started"]:checked) input[type="checkbox"] {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.cb-label:has(input[data-action="done"]:checked) input[type="checkbox"] {
+  background: #22c55e;
+  border-color: #22c55e;
 }
 
 .cb-label input[type="checkbox"]:checked::after {
   content: '';
   position: absolute;
-  left: 2.5px;
-  top: 0.5px;
-  width: 7px;
-  height: 4.5px;
+  left: 2px;
+  top: 0px;
+  width: 6px;
+  height: 4px;
   border-left: 2px solid #000;
   border-bottom: 2px solid #000;
   transform: rotate(-45deg);
 }
 
 .delete-btn {
-  background: none;
-  border: none;
-  color: #333;
-  cursor: pointer;
-  font-size: 1.15rem;
-  line-height: 1;
-  padding: 3px 5px;
-  border-radius: 4px;
-  transition: color 0.15s;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #252525;
+  background: #111;
+  color: #555;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
-.delete-btn:hover { color: #f87171; }
+.delete-btn:hover {
+  background: #2b0f0f;
+  border-color: #5a1a1a;
+  color: #f87171;
+}
 
 /* ── Divider between started/pending ── */
 .list-section-label {
