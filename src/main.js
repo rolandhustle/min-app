@@ -567,6 +567,163 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   })
 })
 
+// ── Väder ────────────────────────────────────────────────
+const WMO = {
+  0:  { label: 'Klart',               emoji: '☀️' },
+  1:  { label: 'Mestadels klart',     emoji: '🌤️' },
+  2:  { label: 'Delvis mulet',        emoji: '⛅' },
+  3:  { label: 'Mulet',               emoji: '☁️' },
+  45: { label: 'Dimma',               emoji: '🌫️' },
+  48: { label: 'Rimfrostdimma',       emoji: '🌫️' },
+  51: { label: 'Lätt duggregn',       emoji: '🌦️' },
+  53: { label: 'Duggregn',            emoji: '🌦️' },
+  55: { label: 'Kraftigt duggregn',   emoji: '🌧️' },
+  61: { label: 'Lätt regn',           emoji: '🌧️' },
+  63: { label: 'Regn',                emoji: '🌧️' },
+  65: { label: 'Kraftigt regn',       emoji: '🌧️' },
+  71: { label: 'Lätt snö',            emoji: '🌨️' },
+  73: { label: 'Snöfall',             emoji: '🌨️' },
+  75: { label: 'Kraftigt snöfall',    emoji: '❄️' },
+  77: { label: 'Snöblandat regn',     emoji: '🌨️' },
+  80: { label: 'Lätta skurar',        emoji: '🌦️' },
+  81: { label: 'Skurar',              emoji: '🌦️' },
+  82: { label: 'Kraftiga skurar',     emoji: '⛈️' },
+  85: { label: 'Snöbyar',             emoji: '🌨️' },
+  86: { label: 'Kraftiga snöbyar',    emoji: '❄️' },
+  95: { label: 'Åska',                emoji: '⛈️' },
+  96: { label: 'Åska med hagel',      emoji: '⛈️' },
+  99: { label: 'Kraftig åska',        emoji: '⛈️' },
+}
+
+function wmo(code) {
+  return WMO[code] ?? { label: 'Okänt', emoji: '🌡️' }
+}
+
+let vaderData = null
+let vaderFetchedAt = 0
+
+function renderVader(state) {
+  const el = document.getElementById('vader-content')
+  if (!el) return
+
+  if (state === 'loading') {
+    el.innerHTML = `<div class="vader-loading">Hämtar väderdata…</div>`
+    return
+  }
+
+  if (state === 'denied') {
+    el.innerHTML = `
+      <div class="vader-error">
+        <div class="vader-error-icon">🔒</div>
+        Platsåtkomst nekades.<br>Tillåt platsåtkomst i webbläsaren för att se väder.
+      </div>`
+    return
+  }
+
+  if (state === 'error') {
+    el.innerHTML = `
+      <div class="vader-error">
+        <div class="vader-error-icon">📡</div>
+        Kunde inte hämta väderdata.<br>Kontrollera anslutningen och försök igen.
+        <br><br>
+        <button class="vader-refresh-btn" id="vader-retry">Försök igen</button>
+      </div>`
+    document.getElementById('vader-retry')?.addEventListener('click', loadVader)
+    return
+  }
+
+  const { current, hourly } = vaderData
+  const { temperature_2m, apparent_temperature, weathercode, windspeed_10m } = current
+  const w = wmo(weathercode)
+
+  const currentHour = new Date().getHours()
+  const hourlyTiles = hourly.time
+    .map((t, i) => ({
+      time: t.split('T')[1].slice(0, 5),
+      hour: parseInt(t.split('T')[1]),
+      temp: Math.round(hourly.temperature_2m[i]),
+      code: hourly.weathercode[i],
+    }))
+    .filter(h => h.hour >= currentHour)
+    .slice(0, 8)
+
+  const hourlyHtml = hourlyTiles.map((h, i) => `
+    <div class="vader-hour${i === 0 ? ' is-now' : ''}">
+      <div class="vader-hour-time">${i === 0 ? 'Nu' : h.time}</div>
+      <div class="vader-hour-emoji">${wmo(h.code).emoji}</div>
+      <div class="vader-hour-temp">${h.temp}°</div>
+    </div>`).join('')
+
+  const updatedAt = new Date(vaderFetchedAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+
+  el.innerHTML = `
+    <div class="vader-card">
+      <div class="vader-emoji">${w.emoji}</div>
+      <div class="vader-temp">${Math.round(temperature_2m)}°</div>
+      <div class="vader-desc">${w.label}</div>
+      <div class="vader-meta">
+        <span>Känns som ${Math.round(apparent_temperature)}°</span>
+        <span>Vind ${Math.round(windspeed_10m)} m/s</span>
+      </div>
+    </div>
+    <div class="vader-section-label">De närmaste timmarna</div>
+    <div class="vader-hourly">${hourlyHtml}</div>
+    <div class="vader-footer">
+      <button class="vader-refresh-btn" id="vader-refresh">Uppdatera</button>
+      <span class="vader-updated">Uppdaterades ${updatedAt}</span>
+    </div>`
+
+  document.getElementById('vader-refresh')?.addEventListener('click', () => {
+    vaderFetchedAt = 0
+    loadVader()
+  })
+}
+
+async function loadVader() {
+  if (vaderData && Date.now() - vaderFetchedAt < 30 * 60 * 1000) {
+    renderVader('data')
+    return
+  }
+
+  renderVader('loading')
+
+  if (!navigator.geolocation) {
+    renderVader('error')
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const { latitude: lat, longitude: lon } = pos.coords
+      try {
+        const url = 'https://api.open-meteo.com/v1/forecast'
+          + `?latitude=${lat}&longitude=${lon}`
+          + '&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m'
+          + '&hourly=temperature_2m,weathercode'
+          + '&timezone=auto'
+          + '&forecast_days=1'
+          + '&wind_speed_unit=ms'
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+        if (!res.ok) throw new Error('API error')
+        const data = await res.json()
+        vaderData = { current: data.current, hourly: data.hourly }
+        vaderFetchedAt = Date.now()
+        renderVader('data')
+      } catch {
+        renderVader('error')
+      }
+    },
+    err => {
+      renderVader(err.code === err.PERMISSION_DENIED ? 'denied' : 'error')
+    },
+    { timeout: 10000 }
+  )
+}
+
+document.querySelector('[data-tab="vader"]')?.addEventListener('click', () => {
+  if (!vaderData) loadVader()
+})
+
 // ── Lägg till-formulär ───────────────────────────────────
 const dateInput  = document.getElementById('task-date')
 const titleInput = document.getElementById('task-title')

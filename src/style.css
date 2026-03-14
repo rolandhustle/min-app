@@ -647,6 +647,145 @@ main {
   margin-top: 3px;
 }
 
+/* ── Väder ── */
+.vader-loading,
+.vader-error {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.vader-error-icon {
+  font-size: 2.2rem;
+  margin-bottom: 14px;
+}
+
+.vader-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 28px 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.vader-emoji {
+  font-size: 3.6rem;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.vader-temp {
+  font-size: 3.2rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.vader-desc {
+  font-size: 0.95rem;
+  color: var(--text-sub);
+  margin-bottom: 16px;
+}
+
+.vader-meta {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.vader-section-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.vader-hourly {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  margin-bottom: 24px;
+}
+
+.vader-hourly::-webkit-scrollbar { display: none; }
+
+.vader-hour {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+  min-width: 62px;
+  transition: border-color 0.15s;
+}
+
+.vader-hour.is-now {
+  border-color: var(--border-hover);
+  background: var(--surface2);
+}
+
+.vader-hour-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+  font-weight: 500;
+}
+
+.vader-hour.is-now .vader-hour-time {
+  color: var(--text-sub);
+}
+
+.vader-hour-emoji {
+  font-size: 1.25rem;
+  margin-bottom: 7px;
+}
+
+.vader-hour-temp {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.vader-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.vader-refresh-btn {
+  padding: 8px 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.vader-refresh-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.vader-updated {
+  font-size: 0.7rem;
+  color: #333;
+}
+
 /* ── Responsive ── */
 @media (max-width: 560px) {
   header { padding: 16px 20px 14px; }
