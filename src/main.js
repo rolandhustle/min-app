@@ -116,17 +116,24 @@ function buildCard(task) {
       <div class="task-date">${formatDate(task.date)}</div>
     </div>
     <div class="task-actions">
-      <label class="cb-label">
+      <label class="action-btn action-started">
         <input type="checkbox" data-action="started" data-id="${task.id}"${task.started ? ' checked' : ''}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
         Påbörjad
       </label>
-      <label class="cb-label">
+      <label class="action-btn action-done">
         <input type="checkbox" data-action="done" data-id="${task.id}"${task.done ? ' checked' : ''}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 12 9 17 20 6"/>
+        </svg>
         Klar
       </label>
-      <button class="delete-btn" data-action="delete" data-id="${task.id}" title="Kasta uppgift" aria-label="Kasta">
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/>
+      <button class="action-btn action-delete" data-action="delete" data-id="${task.id}" aria-label="Kasta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
         </svg>
         Kasta
       </button>
@@ -203,6 +210,13 @@ document.addEventListener('change', async e => {
   if (action === 'started') {
     await updateDoc(taskRef, { started: e.target.checked })
   } else if (action === 'done') {
+    if (e.target.checked) {
+      const card = e.target.closest('.task-card')
+      if (card) {
+        card.classList.add('flashing-done')
+        await new Promise(r => setTimeout(r, 500))
+      }
+    }
     await updateDoc(taskRef, { done: e.target.checked })
   }
   // onSnapshot renderar om automatiskt efter updateDoc.
@@ -212,6 +226,11 @@ document.addEventListener('change', async e => {
 document.addEventListener('click', async e => {
   const btn = e.target.closest('[data-action="delete"]')
   if (!btn) return
+  const card = btn.closest('.task-card')
+  if (card) {
+    card.classList.add('flashing-delete')
+    await new Promise(r => setTimeout(r, 500))
+  }
   await deleteDoc(doc(db, 'tasks', btn.dataset.id))
 })
 

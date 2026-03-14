@@ -269,71 +269,46 @@ main {
   flex-shrink: 0;
 }
 
-.cb-label {
-  display: flex;
+.action-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  padding: 6px 12px;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  min-width: 92px;
   border-radius: 7px;
   border: 1px solid #252525;
   background: #111;
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  line-height: 1;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
-.cb-label:hover { border-color: #383838; color: #999; }
+.action-btn input[type="checkbox"] { display: none; }
 
-.cb-label:has(input[data-action="started"]:checked) {
+.action-btn:hover { border-color: #383838; color: #999; }
+
+.action-btn.action-started:has(input:checked) {
   background: #0d1f3a;
   border-color: #1e3a6a;
   color: #5b9ef4;
 }
 
-.cb-label:has(input[data-action="done"]:checked) {
+.action-btn.action-done:has(input:checked) {
   background: #0d2b1a;
   border-color: #1a4a2a;
   color: #4ade80;
 }
 
-.cb-label input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid #3a3a3a;
-  border-radius: 3px;
-  cursor: pointer;
-  position: relative;
-  flex-shrink: 0;
-  transition: border-color 0.15s, background 0.15s;
-  background: transparent;
-}
-
-.cb-label:has(input[data-action="started"]:checked) input[type="checkbox"] {
-  background: #3b82f6;
-  border-color: #3b82f6;
-}
-
-.cb-label:has(input[data-action="done"]:checked) input[type="checkbox"] {
-  background: #22c55e;
-  border-color: #22c55e;
-}
-
-.cb-label input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 0px;
-  width: 6px;
-  height: 4px;
-  border-left: 2px solid #000;
-  border-bottom: 2px solid #000;
-  transform: rotate(-45deg);
+.action-btn.action-delete:hover {
+  background: #2b0f0f;
+  border-color: #5a1a1a;
+  color: #f87171;
 }
 
 .delete-btn {
@@ -646,6 +621,27 @@ main {
   color: var(--text-muted);
   margin-top: 3px;
 }
+
+/* ── Flash-animationer ── */
+@keyframes flash-done {
+  0%   { background: var(--surface); border-color: var(--border); box-shadow: none; }
+  35%  { background: #071d10; border-color: #22c55e; box-shadow: 0 0 14px rgba(34,197,94,0.25); }
+  100% { background: #071d10; border-color: #1a4a2a; opacity: 0; box-shadow: none; }
+}
+
+@keyframes flash-delete {
+  0%   { background: var(--surface); border-color: var(--border); box-shadow: none; }
+  35%  { background: #190606; border-color: #ef4444; box-shadow: 0 0 14px rgba(239,68,68,0.25); }
+  100% { background: #100505; border-color: #5a1a1a; opacity: 0; box-shadow: none; }
+}
+
+.task-card.flashing-done,
+.task-card.flashing-delete {
+  pointer-events: none;
+}
+
+.task-card.flashing-done   { animation: flash-done   0.55s ease-in-out forwards; }
+.task-card.flashing-delete { animation: flash-delete 0.55s ease-in-out forwards; }
 
 /* ── Väder ── */
 .vader-loading,
