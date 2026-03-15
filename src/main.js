@@ -214,7 +214,7 @@ document.addEventListener('change', async e => {
       const card = e.target.closest('.task-card')
       if (card) {
         card.classList.add('flashing-done')
-        await new Promise(r => setTimeout(r, 500))
+        await new Promise(r => setTimeout(r, 950))
       }
     }
     await updateDoc(taskRef, { done: e.target.checked })
@@ -229,7 +229,7 @@ document.addEventListener('click', async e => {
   const card = btn.closest('.task-card')
   if (card) {
     card.classList.add('flashing-delete')
-    await new Promise(r => setTimeout(r, 500))
+    await new Promise(r => setTimeout(r, 950))
   }
   await deleteDoc(doc(db, 'tasks', btn.dataset.id))
 })
@@ -261,7 +261,14 @@ function renderInkop() {
       <label class="inkop-label">
         <input type="checkbox" data-action="inkop-check" data-id="${item.id}">
         <span>${escapeHtml(item.name)}</span>
-      </label>`
+      </label>
+      <button class="action-btn action-delete" data-action="inkop-delete" data-id="${item.id}" aria-label="Kasta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+        </svg>
+        Kasta
+      </button>`
     list.appendChild(row)
   })
 }
@@ -287,7 +294,23 @@ document.getElementById('inkop-form').addEventListener('submit', async e => {
 
 document.addEventListener('change', async e => {
   if (e.target.dataset.action !== 'inkop-check') return
+  const inkopItem = e.target.closest('.inkop-item')
+  if (inkopItem) {
+    inkopItem.classList.add('flashing-done')
+    await new Promise(r => setTimeout(r, 950))
+  }
   await deleteDoc(doc(db, 'inkop', e.target.dataset.id))
+})
+
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-action="inkop-delete"]')
+  if (!btn) return
+  const inkopItem = btn.closest('.inkop-item')
+  if (inkopItem) {
+    inkopItem.classList.add('flashing-delete')
+    await new Promise(r => setTimeout(r, 950))
+  }
+  await deleteDoc(doc(db, 'inkop', btn.dataset.id))
 })
 
 // ── Extrahera råvara ur ingredienssträng ─────────────────
