@@ -377,49 +377,21 @@ main {
 
 .inkop-item:hover { border-color: var(--border-hover); }
 
-.inkop-label {
+.inkop-name {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  user-select: none;
   font-size: 0.92rem;
   color: var(--text);
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.inkop-label input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid #3a3a3a;
-  border-radius: 50%;
-  cursor: pointer;
+.inkop-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
-  position: relative;
-  transition: border-color 0.15s, background 0.15s;
-  background: transparent;
-}
-
-.inkop-label input[type="checkbox"]:hover { border-color: #666; }
-
-.inkop-label input[type="checkbox"]:checked {
-  background: var(--text);
-  border-color: var(--text);
-}
-
-.inkop-label input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 1px;
-  width: 8px;
-  height: 5px;
-  border-left: 2px solid #000;
-  border-bottom: 2px solid #000;
-  transform: rotate(-45deg);
 }
 
 /* ── Recept ── */
@@ -760,6 +732,67 @@ main {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text);
+}
+
+.vader-daily {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 24px;
+}
+
+.vader-day {
+  display: grid;
+  grid-template-columns: 52px 1.6rem 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+
+.vader-day.is-today {
+  border-color: var(--border-hover);
+  background: var(--surface2);
+}
+
+.vader-day-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.vader-day-emoji {
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.vader-day-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vader-day-temps {
+  display: flex;
+  gap: 8px;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.vader-day-max {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.vader-day-min {
+  color: var(--text-muted);
 }
 
 .vader-footer {

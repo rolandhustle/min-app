@@ -258,17 +258,23 @@ function renderInkop() {
     const row = document.createElement('div')
     row.className = 'inkop-item'
     row.innerHTML = `
-      <label class="inkop-label">
-        <input type="checkbox" data-action="inkop-check" data-id="${item.id}">
-        <span>${escapeHtml(item.name)}</span>
-      </label>
-      <button class="action-btn action-delete" data-action="inkop-delete" data-id="${item.id}" aria-label="Kasta">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-        </svg>
-        Kasta
-      </button>`
+      <span class="inkop-name">${escapeHtml(item.name)}</span>
+      <div class="inkop-actions">
+        <label class="action-btn action-done">
+          <input type="checkbox" data-action="inkop-check" data-id="${item.id}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 12 9 17 20 6"/>
+          </svg>
+          Klar
+        </label>
+        <button class="action-btn action-delete" data-action="inkop-delete" data-id="${item.id}" aria-label="Kasta">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+          Kasta
+        </button>
+      </div>`
     list.appendChild(row)
   })
 }
@@ -696,6 +702,26 @@ function renderVader(state) {
       <div class="vader-hour-temp">${h.temp}°</div>
     </div>`).join('')
 
+  const dailyHtml = vaderData.daily.time.map((dateStr, i) => {
+    const date = new Date(dateStr + 'T12:00:00')
+    const dayLabel = i === 0
+      ? 'Idag'
+      : date.toLocaleDateString('sv-SE', { weekday: 'short' })
+    const dw = wmo(vaderData.daily.weathercode[i])
+    const max = Math.round(vaderData.daily.temperature_2m_max[i])
+    const min = Math.round(vaderData.daily.temperature_2m_min[i])
+    return `
+      <div class="vader-day${i === 0 ? ' is-today' : ''}">
+        <div class="vader-day-name">${dayLabel}</div>
+        <div class="vader-day-emoji">${dw.emoji}</div>
+        <div class="vader-day-desc">${dw.label}</div>
+        <div class="vader-day-temps">
+          <span class="vader-day-max">${max}°</span>
+          <span class="vader-day-min">${min}°</span>
+        </div>
+      </div>`
+  }).join('')
+
   const updatedAt = new Date(vaderFetchedAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
 
   el.innerHTML = `
@@ -710,6 +736,8 @@ function renderVader(state) {
     </div>
     <div class="vader-section-label">De närmaste timmarna</div>
     <div class="vader-hourly">${hourlyHtml}</div>
+    <div class="vader-section-label">10-dagarsprognos</div>
+    <div class="vader-daily">${dailyHtml}</div>
     <div class="vader-footer">
       <button class="vader-refresh-btn" id="vader-refresh">Uppdatera</button>
       <span class="vader-updated">Uppdaterades ${updatedAt}</span>
@@ -742,13 +770,14 @@ async function loadVader() {
           + `?latitude=${lat}&longitude=${lon}`
           + '&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m'
           + '&hourly=temperature_2m,weathercode'
+          + '&daily=weathercode,temperature_2m_max,temperature_2m_min'
           + '&timezone=auto'
-          + '&forecast_days=1'
+          + '&forecast_days=10'
           + '&wind_speed_unit=ms'
         const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
         if (!res.ok) throw new Error('API error')
         const data = await res.json()
-        vaderData = { current: data.current, hourly: data.hourly }
+        vaderData = { current: data.current, hourly: data.hourly, daily: data.daily }
         vaderFetchedAt = Date.now()
         renderVader('data')
       } catch {
