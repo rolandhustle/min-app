@@ -51,6 +51,7 @@ const DAILY_TASKS = [
   '1 minut plankan',
   '1 minut jägarställning',
   '15 armhävningar',
+  '15 knäböj',
 ]
 
 async function maybeCreateDailyTasks(currentTasks) {
