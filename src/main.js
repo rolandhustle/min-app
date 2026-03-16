@@ -151,7 +151,6 @@ function render() {
   const done = tasks.filter(t =>  t.done)
 
   document.getElementById('count-todo').textContent = todo.length
-  document.getElementById('count-done').textContent = done.length
 
   todoList.innerHTML = ''
   if (todo.length === 0) {
@@ -164,6 +163,13 @@ function render() {
       </div>`
   } else {
     todo.forEach(t => todoList.appendChild(buildCard(t)))
+  }
+
+  const doneLinkWrap = document.getElementById('done-link-wrap')
+  if (doneLinkWrap) {
+    doneLinkWrap.innerHTML = done.length > 0
+      ? `<button class="done-link" data-action="show-done">Genomförda uppgifter (${done.length})</button>`
+      : ''
   }
 
   doneList.innerHTML = ''
@@ -607,13 +613,27 @@ document.addEventListener('click', async e => {
 })
 
 // ── Flikar ───────────────────────────────────────────────
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+  const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`)
+  if (btn) btn.classList.add('active')
+  document.getElementById('panel-' + tabName)?.classList.add('active')
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+})
+
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-action="show-done"]')) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
-    btn.classList.add('active')
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active')
-  })
+    document.getElementById('panel-done').classList.add('active')
+  }
+  if (e.target.closest('[data-action="done-back"]')) {
+    switchTab('todo')
+  }
 })
 
 // ── Väder ────────────────────────────────────────────────

@@ -28,10 +28,12 @@
       <button type="submit">Lägg till</button>
     </form>
     <div class="task-list" id="todo-list"></div>
+    <div id="done-link-wrap"></div>
   </div>
 
   <!-- Tab 2 -->
   <div class="tab-panel" id="panel-done">
+    <button class="done-back-btn" data-action="done-back">← Att göra</button>
     <div class="task-list" id="done-list"></div>
   </div>
 
@@ -71,16 +73,7 @@
     </div>
     <span class="tab-label">Att göra</span>
   </button>
-  <button class="tab-btn" data-tab="done">
-    <div class="tab-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      <span class="count" id="count-done">0</span>
-    </div>
-    <span class="tab-label">Genomfört</span>
-  </button>
-  <button class="tab-btn" data-tab="inkop">
+<button class="tab-btn" data-tab="inkop">
     <div class="tab-icon">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
