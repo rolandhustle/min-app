@@ -48,10 +48,10 @@ function escapeHtml(str) {
 // ── Dagliga uppgifter ────────────────────────────────────
 const DAILY_TASKS = [
   'Sök ett nytt jobb',
-  '1 minut plankan',
-  '1 minut jägarställning',
-  '15 armhävningar',
-  '15 knäböj',
+  '80 sekunder plankan',
+  '80 sekunder jägarställning',
+  '20 armhävningar',
+  '20 knäböj',
 ]
 
 async function maybeCreateDailyTasks(currentTasks) {
@@ -101,10 +101,12 @@ let tasks = []
 function buildCard(task) {
   const status = getStatus(task)
   const card = document.createElement('div')
+  const isFuture = !task.done && task.date > todayStr()
   card.className =
     'task-card' +
     (task.done ? ' is-done' : '') +
-    (status === 'delayed' ? ' is-overdue' : '')
+    (status === 'delayed' ? ' is-overdue' : '') +
+    (isFuture ? ' is-future' : '')
   card.dataset.id = task.id
 
   card.innerHTML = `
